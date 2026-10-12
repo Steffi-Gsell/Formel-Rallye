@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style>
+<title>Prozent-Rallye</title>
+<style>
+/* Layout: one phone-first column. A shop-window "Kassenzettel" card holds each task; level tiles look like price tags. */
+:root {
+  --bg: #EEF1EC; --paper: #FFFFFF; --ink: #1E2A24; --muted: #5E6B63;
+  --sale: #D7352B; --tag: #FFD23F; --ok: #1F8A4C; --line: #D3D9D2; --chip: #F4F6F2;
+  --G: #F0DEA9; --p: #A3BBAE; --P: #E9A191;
+  --display: "Bungee", "Arial Black", Impact, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141A17; --paper: #1F2823; --ink: #ECF1EC; --muted: #A2AFA6; --sale: #FF6B5E; --tag: #FFD23F; --ok: #4BC27D; --line: #33403A; --chip: #26302B;
+  --G: #6B5A26; --p: #3E5B4D; --P: #7A3F33; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #141A17; --paper: #1F2823; --ink: #ECF1EC; --muted: #A2AFA6; --sale: #FF6B5E; --tag: #FFD23F; --ok: #4BC27D; --line: #33403A; --chip: #26302B;
+  --G: #6B5A26; --p: #3E5B4D; --P: #7A3F33; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.45; }
+.wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: flex; flex-direction: column; gap: 16px; }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.logo { font-family: var(--display); font-size: clamp(26px, 8vw, 36px); line-height: 1; letter-spacing: .5px; }
+.logo span { color: var(--sale); }
+.score { font-family: var(--mono); font-weight: 600; background: var(--tag); color: #1E2A24; padding: 6px 12px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sub { color: var(--muted); margin: -8px 0 0; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 4px 0 0; text-wrap: balance; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tag { position: relative; text-align: left; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); border-radius: 10px 10px 10px 28px; padding: 14px 14px 12px 34px; font: inherit; cursor: pointer; min-height: 112px; display: flex; flex-direction: column; gap: 4px; transition: transform .12s; }
+.tag::before { content: ""; position: absolute; left: 11px; top: 14px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--ink); background: var(--bg); }
+.tag:hover, .tag:focus-visible { transform: translateY(-2px) rotate(-1deg); outline: none; box-shadow: 0 4px 0 var(--ink); }
+.tag b { font-size: 17px; line-height: 1.2; }
+.tag small { color: var(--muted); font-size: 13px; }
+.tag .stars { font-size: 15px; letter-spacing: 2px; color: var(--sale); margin-top: auto; }
+.tag.mix { grid-column: 1 / -1; background: var(--sale); color: #fff; border-color: var(--sale); min-height: 0; }
+.tag.mix small, .tag.mix .stars { color: #FFE1DD; }
+.tag.mix::before { border-color: #fff; background: var(--sale); }
+.receipt { background: var(--paper); border-radius: 6px; padding: 20px 18px 22px; position: relative; box-shadow: 0 1px 0 var(--line), 0 8px 24px rgba(0,0,0,.06);
+  -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000) 0 0/16px 100% repeat-x; mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000) 0 0/16px 100% repeat-x; padding-bottom: 30px; }
+.meta { display: flex; justify-content: space-between; gap: 8px; font-family: var(--mono); font-size: 13px; color: var(--muted); border-bottom: 1px dashed var(--line); padding-bottom: 10px; margin-bottom: 14px; }
+.bar { height: 8px; background: var(--chip); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--sale); width: 0; transition: width .3s; }
+.q { font-size: 19px; margin: 0 0 14px; }
+.q .num { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+.opts { display: grid; gap: 10px; }
+.opt { text-align: left; font: inherit; font-size: 17px; padding: 12px 14px; border-radius: 10px; border: 2px solid var(--line); background: var(--chip); color: var(--ink); cursor: pointer; }
+.opt:hover, .opt:focus-visible { border-color: var(--ink); outline: none; }
+.opt.right { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, var(--paper)); }
+.opt.wrong { border-color: var(--sale); background: color-mix(in srgb, var(--sale) 14%, var(--paper)); }
+.inrow { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.inrow input { flex: 1 1 140px; min-width: 0; font-family: var(--mono); font-size: 22px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); }
+.unit { align-self: center; font-family: var(--mono); font-size: 20px; color: var(--muted); }
+.btn { font: inherit; font-weight: 700; padding: 12px 18px; border-radius: 10px; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+.hint { margin-top: 12px; background: var(--chip); border-left: 4px solid var(--tag); padding: 10px 12px; border-radius: 6px; font-size: 15px; }
+.fb { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 16px; }
+.fb.ok { background: color-mix(in srgb, var(--ok) 15%, var(--paper)); border: 2px solid var(--ok); }
+.fb.no { background: color-mix(in srgb, var(--sale) 12%, var(--paper)); border: 2px solid var(--sale); }
+.fb strong { display: block; margin-bottom: 4px; }
+.way { font-family: var(--mono); font-size: 15px; margin-top: 6px; overflow-x: auto; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip { font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; color: #1E2A24; }
+.cG { background: #F0DEA9; } .cp { background: #A3BBAE; } .cP { background: #E9A191; }
+.formula { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.formula div { background: var(--chip); border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 14px; }
+.end { text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.big { font-family: var(--display); font-size: 52px; line-height: 1; color: var(--sale); }
+.bigstars { font-size: 34px; letter-spacing: 6px; color: var(--tag); text-shadow: 0 1px 0 var(--ink); }
+.foot { color: var(--muted); font-size: 13px; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .tag, .bar i { transition: none; } }
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const R = a => a[Math.floor(Math.random() * a.length)];
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const r2 = x => Math.round(x * 100) / 100;
+const de = (x, d = 2) => { x = r2(x); let s = Number.isInteger(x) ? String(x) : x.toFixed(d).replace(/0+$/, "").replace(/\.$/, ""); const [a, b] = s.split("."); return a.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + (b ? "," + b : ""); };
+const eur = x => { const s = r2(x).toFixed(2).split("."); return s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + s[1] + " €"; };
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const LB = { G: "G", P: "Pw", p: "ps" };
+const F = { P: "Pw = G · ps : 100", G: "G = Pw · 100 : ps", p: "ps = Pw · 100 : G" };
+
+/* ---------- Aufgaben-Generatoren ---------- */
+const ctx = [
+  [n => `In einer Klasse sind <span class="num">${n.G} Schüler</span>. <span class="num">${n.p} %</span> fahren mit dem Bus. Das sind <span class="num">${n.P} Schüler</span>.`, "Schüler"],
+  [n => `Ein Handy kostet <span class="num">${eur(n.G)}</span>. Lea hat schon <span class="num">${n.p} %</span> gespart. Das sind <span class="num">${eur(n.P)}</span>.`, "€"],
+  [n => `Ein Verein hat <span class="num">${n.G} Mitglieder</span>. <span class="num">${n.P}</span> davon sind Kinder. Das sind <span class="num">${n.p} %</span>.`, "Mitglieder"],
+];
+const nice = () => { const p = R([10, 20, 25, 30, 40, 50, 60, 75, 5, 15]); const G = R([20, 40, 60, 80, 120, 200, 240, 300, 400, 500]); return { G, p, P: r2(G * p / 100) }; };
+
+const gen = {
+  basics() {
+    const n = nice(), c = R(ctx), want = R(["G", "P", "p"]);
+    if (Math.random() < 0.5) {
+      const name = { G: "Grundwert", P: "Prozentwert", p: "Prozentsatz" }[want];
+      const val = { G: c[1] === "€" ? eur(n.G) : `${n.G} ${c[1]}`, P: c[1] === "€" ? eur(n.P) : `${n.P} ${c[1]}`, p: `${n.p} %` };
+      return { type: "mc", q: `${c[0](n)}<br><br>Was ist der <b>${name}</b>?`, opts: shuffle(Object.values(val)), a: val[want],
+        hint: "Grundwert G = das Ganze (100 %) · Prozentsatz ps = die Zahl mit % · Prozentwert Pw = der Teil vom Ganzen", way: `${name}: ${val[want]}` };
+    }
+    const giv = { G: ["P", "p"], P: ["G", "p"], p: ["P", "G"] }[want];
+    return { type: "mc", q: `Gegeben sind <b>${LB[giv[0]]}</b> und <b>${LB[giv[1]]}</b>. Gesucht ist <b>${LB[want]}</b>.<br>Welche Formel brauchst du?`, opts: shuffle(Object.values(F)), a: F[want],
+      hint: "Schau, was gesucht ist: Diese Größe steht links vom Gleichheitszeichen.", way: F[want] };
+  },
+  formula() {
+    const n = nice(), t = R(["P", "G", "p"]);
+    if (t === "P") return { type: "num", unit: "€", q: `Eine Jacke kostet <span class="num">${eur(n.G)}</span>. Es gibt <span class="num">${n.p} %</span> Rabatt. Wie viel Euro spart man?`, a: n.P, hint: F.P, way: `Pw = ${de(n.G)} · ${n.p} : 100 = ${eur(n.P)}` };
+    if (t === "G") return { type: "num", unit: "Schüler", q: `<span class="num">${n.p} %</span> der Schüler einer Schule sind <span class="num">${de(n.P)} Schüler</span>. Wie viele Schüler hat die Schule?`, a: n.G, hint: F.G, way: `G = ${de(n.P)} · 100 : ${n.p} = ${de(n.G)}` };
+    return { type: "num", unit: "%", q: `Von <span class="num">${n.G} Losen</span> sind <span class="num">${de(n.P)} Gewinne</span>. Wie viel Prozent sind das?`, a: n.p, hint: F.p, way: `ps = ${de(n.P)} · 100 : ${n.G} = ${n.p} %` };
+  },
+  diagram() {
+    const k = ri(0, 2);
+    if (k === 0) { const p = R([5, 10, 20, 25, 30, 40, 50, 75, 15, 35]); return { type: "num", unit: "°", q: `Im Kreisdiagramm sind <span class="num">${p} %</span> wie viel Grad?`, a: p * 3.6, hint: "Der ganze Kreis hat 360° = 100 %. Also 1 % = 3,6°.", way: `${p} · 3,6° = ${de(p * 3.6)}°` }; }
+    if (k === 1) { const d = R([36, 72, 90, 108, 144, 180, 270, 54]); return { type: "num", unit: "%", q: `Ein Kreisausschnitt hat <span class="num">${d}°</span>. Wie viel Prozent sind das?`, a: d / 3.6, hint: "Teile den Winkel durch 3,6°.", way: `${d}° : 3,6° = ${de(d / 3.6)} %` }; }
+    const L = R([10, 20]), p = R([10, 15, 20, 25, 30, 40, 45]); return { type: "num", unit: "cm", q: `Ein Streifendiagramm ist <span class="num">${L} cm</span> lang. Wie lang ist der Abschnitt für <span class="num">${p} %</span>?`, a: L * p / 100, hint: "Die Länge des Streifens ist der Grundwert: Pw = G · ps : 100", way: `Pw = ${L} · ${p} : 100 = ${de(L * p / 100)} cm` };
+  },
+  prices() {
+    const k = ri(0, 3), G = R([40, 60, 80, 120, 150, 200, 250, 320, 480]);
+    if (k === 0) { const p = R([10, 15, 20, 25, 30]); return { type: "num", unit: "€", q: `Turnschuhe kosten <span class="num">${eur(G)}</span>. Es gibt <span class="num">${p} %</span> Rabatt. Wie viel kosten sie jetzt?`, a: G * (100 - p) / 100, hint: `Neuer Preis ≙ 100 % − ${p} % = ${100 - p} %`, way: `Pw = ${de(G)} · ${100 - p} : 100 = ${eur(G * (100 - p) / 100)}` }; }
+    if (k === 1) { const p = R([5, 10, 4, 8]); return { type: "num", unit: "€", q: `Ein Ticket kostet <span class="num">${eur(G)}</span>. Der Preis steigt um <span class="num">${p} %</span>. Wie viel kostet es jetzt?`, a: G * (100 + p) / 100, hint: `Neuer Preis ≙ 100 % + ${p} % = ${100 + p} %`, way: `Pw = ${de(G)} · ${100 + p} : 100 = ${eur(G * (100 + p) / 100)}` }; }
+    if (k === 2) { return { type: "num", unit: "€", q: `Kopfhörer kosten <span class="num">${eur(G)}</span> zzgl. <span class="num">19 %</span> MwSt. Wie hoch ist der Endpreis?`, a: G * 1.19, hint: "Endpreis ≙ 100 % + 19 % = 119 %", way: `Pw = ${de(G)} · 119 : 100 = ${eur(G * 1.19)}` }; }
+    const items = [["25 % Rabatt", "75 %"], ["um 5 % erhöht", "105 %"], ["3 % Skonto", "97 %"], ["zzgl. 19 % MwSt.", "119 %"], ["um 12 % reduziert", "88 %"], ["Preis steigt um 20 %", "120 %"]];
+    const [t, a] = R(items); const wrong = shuffle(items.map(x => x[1]).filter(x => x !== a)).slice(0, 3);
+    return { type: "mc", q: `<b>${t}</b><br>Mit welchem Prozentsatz rechnest du den neuen Preis direkt aus?`, opts: shuffle([a, ...wrong]), a, hint: "Senkung: unter 100 % · Erhöhung: über 100 %", way: `${t} → neuer Preis ≙ ${a}` };
+  },
+  oldprice() {
+    const k = ri(0, 1);
+    if (k === 0) { const p = R([20, 25, 10, 50, 30]), G = R([40, 60, 80, 120, 200, 300]), P = G * (100 - p) / 100;
+      return { type: "num", unit: "€", q: `Eine Hose kostet nach <span class="num">${p} %</span> Rabatt noch <span class="num">${eur(P)}</span>. Wie viel hat sie vorher gekostet?`, a: G, hint: `${eur(P)} sind ${100 - p} %. Gesucht: G = Pw · 100 : ps`, way: `G = ${de(P)} · 100 : ${100 - p} = ${eur(G)}` }; }
+    const p = R([5, 10, 4, 20]), G = R([50, 60, 80, 100, 200, 250]), P = G * (100 + p) / 100;
+    return { type: "num", unit: "€", q: `Eine Monatskarte kostet nach einer Erhöhung um <span class="num">${p} %</span> jetzt <span class="num">${eur(P)}</span>. Was hat sie vorher gekostet?`, a: G, hint: `${eur(P)} sind ${100 + p} %. Gesucht: G = Pw · 100 : ps`, way: `G = ${de(P)} · 100 : ${100 + p} = ${eur(G)}` };
+  },
+  special() {
+    const k = ri(0, 2);
+    if (k === 0) { const N = R([100, 200, 300, 400, 500, 600]), B = N * 1.19;
+      return { type: "num", unit: "€", q: `Ein Fernseher kostet <span class="num">${eur(B)}</span> inkl. 19 % USt. (brutto). Wie hoch ist der <b>Nettopreis</b>?`, a: N, hint: "Brutto ≙ 119 %. Netto ist der Grundwert: G = P · 100 : 119", way: `G = ${de(B)} · 100 : 119 = ${eur(N)}` }; }
+    if (k === 1) { const b = R([10, 12, 15, 20, 25]), t = R([4, 5, 8, 10]);
+      return { type: "num", unit: "kg", q: `Ein Paket wiegt <span class="num">${b} kg</span> brutto. Die Verpackung (Tara) wiegt <span class="num">${t} %</span> davon. Wie schwer ist die <b>Verpackung</b>?`, a: b * t / 100, hint: "Bruttogewicht = 100 %. Pw = G · ps : 100", way: `Pw = ${b} · ${t} : 100 = ${de(b * t / 100)} kg` }; }
+    const G = R([1000, 2000, 5000, 8000, 20000]), pm = R([1, 2, 3, 5]);
+    return { type: "num", unit: "€", q: `Ein Makler bekommt <span class="num">${pm} ‰</span> von <span class="num">${eur(G)}</span>. Wie viel Euro sind das?`, a: G * pm / 1000, hint: "Promille = Tausendstel: Pw = G · ps : 1000", way: `Pw = ${de(G)} · ${pm} : 1000 = ${eur(G * pm / 1000)}` };
+  },
+};
+const LEVELS = [
+  { id: "basics", name: "Grundbegriffe", info: "G, Pw oder ps? Welche Formel?" },
+  { id: "formula", name: "Die drei Formeln", info: "Prozentwert, Grundwert, Prozentsatz" },
+  { id: "diagram", name: "Diagramme", info: "Kreis- und Streifendiagramm" },
+  { id: "prices", name: "Preise ändern sich", info: "Rabatt, Erhöhung, MwSt." },
+  { id: "oldprice", name: "Alter Preis gesucht", info: "Rauf oder runter auf 100 %" },
+  { id: "special", name: "Netto, Tara, Promille", info: "Brutto/Netto, Gewicht, ‰" },
+];
+const PER = 6;
+
+/* ---------- Zustand ---------- */
+let S = { total: store.get("pr_total", 0), stars: store.get("pr_stars", {}) };
+let run = null;
+
+function home() {
+  app.innerHTML = `
+  <header class="top"><div class="logo">PROZENT<span>-</span>RALLYE</div><div class="score" aria-label="Gesamtpunkte">${S.total} P</div></header>
+  <p class="sub">Wiederholung vor der Probe · Rechne immer mit der Formel.</p>
+  <div class="grid" role="list">
+    <button class="tag mix" data-l="mix"><b>Probe-Mix</b><small>12 gemischte Aufgaben aus allen Stationen</small><span class="stars">${"★".repeat(S.stars.mix || 0)}${"☆".repeat(3 - (S.stars.mix || 0))}</span></button>
+    ${LEVELS.map((l, i) => `<button class="tag" data-l="${l.id}"><small>Station ${i + 1}</small><b>${l.name}</b><small>${l.info}</small><span class="stars">${"★".repeat(S.stars[l.id] || 0)}${"☆".repeat(3 - (S.stars[l.id] || 0))}</span></button>`).join("")}
+  </div>
+  <h2>Die Formeln</h2>
+  <div class="formula"><div><span class="chip cP">Pw</span> Pw = G · ps : 100</div><div><span class="chip cG">G</span> G = Pw · 100 : ps</div><div><span class="chip cp">ps</span> ps = Pw · 100 : G</div></div>
+  <p class="foot">Pro Aufgabe: 10 Punkte · mit Hilfe 5 Punkte · drei Richtige in Folge: +5 Bonus. Kommazahlen mit Komma oder Punkt eingeben.</p>`;
+  app.querySelectorAll("[data-l]").forEach(b => b.onclick = () => start(b.dataset.l));
+}
+
+function start(lid) {
+  const n = lid === "mix" ? 12 : PER;
+  const qs = [];
+  for (let i = 0; i < n; i++) qs.push(gen[lid === "mix" ? LEVELS[i % LEVELS.length].id : lid]());
+  run = { lid, qs: lid === "mix" ? shuffle(qs) : qs, i: 0, pts: 0, right: 0, streak: 0, hint: false, done: false };
+  show();
+}
+
+function parseNum(v) { v = String(v).replace(/[€%°\s]|kg|cm|Schüler|Mitglieder/gi, "").trim(); if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, ""); if (/,/.test(v)) v = v.replace(/\./g, "").replace(",", "."); const x = parseFloat(v); return isNaN(x) ? null : x; }
+
+function show() {
+  const q = run.qs[run.i], lv = run.lid === "mix" ? "Probe-Mix" : LEVELS.find(l => l.id === run.lid).name;
+  run.hint = false; run.done = false;
+  app.innerHTML = `
+  <header class="top"><button class="btn ghost" id="back" aria-label="Zur Übersicht">← Stationen</button><div class="score">${run.pts} P</div></header>
+  <div class="bar" aria-hidden="true"><i style="width:${run.i / run.qs.length * 100}%"></i></div>
+  <section class="receipt" aria-live="polite">
+    <div class="meta"><span>${lv}</span><span>Aufgabe ${run.i + 1}/${run.qs.length}</span></div>
+    <p class="q">${q.q}</p>
+    ${q.type === "mc" ? `<div class="opts">${q.opts.map((o, k) => `<button class="opt" data-k="${k}">${o}</button>`).join("")}</div>`
+      : `<form id="f" class="inrow" autocomplete="off"><input id="ans" inputmode="decimal" aria-label="Deine Antwort" placeholder="Ergebnis"><span class="unit">${q.unit}</span><button class="btn" type="submit">Prüfen</button></form>`}
+    <div class="row" style="margin-top:14px"><button class="btn ghost" id="hb">Hilfe (½ Punkte)</button></div>
+    <div id="hint"></div><div id="fb"></div>
+  </section>`;
+  $("#back").onclick = home;
+  $("#hb").onclick = () => { if (run.done) return; run.hint = true; $("#hint").innerHTML = `<div class="hint"><b>Tipp:</b> ${q.hint}</div>`; };
+  if (q.type === "mc") app.querySelectorAll(".opt").forEach(b => b.onclick = () => check(b.textContent, b));
+  else { $("#ans").focus({ preventScroll: true }); $("#f").onsubmit = e => { e.preventDefault(); check($("#ans").value); }; }
+}
+
+function check(val, btn) {
+  if (run.done) return;
+  const q = run.qs[run.i];
+  let ok;
+  if (q.type === "mc") ok = val === q.a;
+  else { const x = parseNum(val); if (x === null) { $("#fb").innerHTML = `<div class="fb no">Bitte gib eine Zahl ein, z. B. 12,5.</div>`; return; } ok = Math.abs(x - r2(q.a)) < 0.011; }
+  run.done = true;
+  if (q.type === "mc") app.querySelectorAll(".opt").forEach(b => { if (b.textContent === q.a) b.classList.add("right"); else if (b === btn) b.classList.add("wrong"); b.disabled = true; });
+  let bonus = 0;
+  if (ok) { run.right++; run.streak++; if (run.streak % 3 === 0) bonus = 5; run.pts += (run.hint ? 5 : 10) + bonus; } else run.streak = 0;
+  const sol = q.type === "mc" ? q.a : q.unit === "€" ? eur(q.a) : `${de(q.a)} ${q.unit}`;
+  $("#fb").innerHTML = `<div class="fb ${ok ? "ok" : "no"}"><strong>${ok ? (bonus ? "Richtig! 3 in Folge: +5 Bonus" : "Richtig!") : "Leider falsch. Richtig ist: " + sol}</strong><div class="way">${q.way}</div></div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" id="nx">${run.i + 1 < run.qs.length ? "Weiter →" : "Auswertung"}</button></div>`;
+  $(".score").textContent = run.pts + " P";
+  $("#nx").focus({ preventScroll: true });
+  $("#nx").onclick = () => { run.i++; run.i < run.qs.length ? show() : end(); };
+}
+
+function end() {
+  const n = run.qs.length, q = run.right / n, st = q === 1 ? 3 : q >= 0.67 ? 2 : q >= 0.34 ? 1 : 0;
+  S.total += run.pts; S.stars[run.lid] = Math.max(S.stars[run.lid] || 0, st);
+  store.set("pr_total", S.total); store.set("pr_stars", S.stars);
+  const msg = st === 3 ? "Alles richtig. Du bist fit für die Probe!" : st === 2 ? "Sehr gut! Schau dir die Fehler noch einmal an." : st === 1 ? "Ein guter Anfang. Übe diese Station noch einmal." : "Übe diese Station noch einmal mit der Hilfe.";
+  app.innerHTML = `
+  <header class="top"><div class="logo">PROZENT<span>-</span>RALLYE</div><div class="score">${S.total} P</div></header>
+  <section class="receipt end">
+    <div class="meta" style="width:100%"><span>Auswertung</span><span>${run.lid === "mix" ? "Probe-Mix" : LEVELS.find(l => l.id === run.lid).name}</span></div>
+    <div class="bigstars" aria-label="${st} von 3 Sternen">${"★".repeat(st)}${"☆".repeat(3 - st)}</div>
+    <div class="big">${run.right}/${n}</div>
+    <p>${msg}<br>Punkte in dieser Runde: <b>${run.pts}</b></p>
+    <div class="row" style="justify-content:center"><button class="btn" id="again">Nochmal (neue Zahlen)</button><button class="btn ghost" id="home">Alle Stationen</button></div>
+  </section>`;
+  $("#again").onclick = () => start(run.lid); $("#home").onclick = home;
+}
+
+home();
+})();
+</script>
+
+</html>
